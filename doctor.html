@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor's Appointment Management</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-size: cover;
+            background-image: url('./images/doc_bg.jpg');
+            background-repeat: no-repeat;
+        }
+
+        .container {
+            font-size: large;
+            background-color: rgba(255, 255, 255, 0.678);
+            padding: 20px;
+            width: 80%;
+            max-width: 150vh;
+            border-radius: 15px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(3px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .btn-decline {
+            background-color: #dc3545;
+        }
+
+        .btn-decline:hover {
+            background-color: #c82333;
+        }
+
+        .btn-reschedule {
+            background-color: #ffc107;
+        }
+
+        .btn-reschedule:hover {
+            background-color: #e0a800;
+        }
+
+        .btn-details {
+            background-color: white;
+            color: black;
+        }
+
+        .btn-details:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* Overlay and Details Panel Styling */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .details-panel {
+            position: relative;
+            width: 80%;
+            max-width: 400px;
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .details-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .details-content h2 {
+            font-size: 1.4em;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.2em;
+            cursor: pointer;
+            color: #333;
+        }
+
+        .overlay.show {
+            display: flex; /* Show overlay and center panel */
+        }
+
+        .top {
+            display: flex;
+            justify-content: space-between; /* Space between items */
+            align-items: center;
+            width: 100%; /* Ensure the nav takes the full width */
+        }
+
+        .heading1 {
+            flex: 1; /* Allow heading to take available space */
+            text-align: center; /* Center the heading text */
+        }
+
+        .linkedtohome {
+            justify-content: right !important;
+            align-items: end;
+            justify-items: right;
+            margin-bottom: 30px;
+            opacity: 20%;
+        }
+
+        .linkedtohome:hover {
+            opacity: 100%;
+            transition: 0.1s ease-in;
+        }
+
+        /* Reschedule Section */
+        .reschedule-section {
+            display: none; /* Hide by default */
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="top">
+            <h1 class="heading1">Manage Patient Appointments</h1>
+            <h3 class="linkedtohome">
+                <a href="index.html" class="linkedtohome" id="linktogohome">Home</a>
+            </h3>
+        </nav>
+
+        <!-- Appointments Table -->
+        <table id="appointmentTable">
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Patient Last Name</th>
+                    <th>Doctor</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Appointments will be loaded dynamically -->
+            </tbody>
+        </table>
+
+        <!-- Reschedule Section -->
+        <div class="reschedule-section" id="rescheduleSection">
+            <h3>Reschedule Appointment</h3>
+            <form id="rescheduleForm">
+                <label for="newDate">New Date:</label>
+                <input type="date" id="newDate" required>
+                <label for="newTime">New Time:</label>
+                <input type="time" id="newTime" required>
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+
+        <!-- Overlay for patient details panel -->
+        <div class="overlay" id="overlay">
+            <div class="details-panel">
+                <div class="details-header">
+                    <h2>Patient Details</h2>
+                    <button class="close-btn" onclick="toggleDetailsPanel()">✕</button>
+                </div>
+                <p id="detailPatientName"></p>
+                <p id="detailPatientlastName"></p>
+                <p id="detailDoctor"></p>
+                <p id="detailDate"></p>
+                <p id="detailTime"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+        const appointmentTableBody = document.querySelector('#appointmentTable tbody');
+
+        function loadAppointments() {
+            appointmentTableBody.innerHTML = ""; // Clear table before loading new data
+
+            appointments.forEach((appointment, index) => {
+                const row = appointmentTableBody.insertRow();
+                
+                // Set background color based on appointment status
+                let backgroundColor;
+                if (appointment.status === 'accepted') {
+                    backgroundColor = '#55d85a94'; // Light green
+                } else if (appointment.status === 'rescheduled') {
+                    backgroundColor = '#e3d13074'; // Light yellow
+                } else {
+                    backgroundColor = ''; // Default
+                }
+
+                row.style.backgroundColor = backgroundColor;
+                
+                row.innerHTML = `
+                    <td>${appointment.patientName}</td>
+                    <td>${appointment.patientLastName}</td>
+                    <td>${appointment.doctor}</td>
+                    <td>${appointment.date}</td>
+                    <td>${appointment.time}</td>
+                    <td>
+                        <button class="btn-accept" onclick="acceptAppointment(${index})">Accept</button>
+                        <button class="btn-decline" onclick="declineAppointment(${index})">Decline</button>
+                        <button class="btn-reschedule" onclick="toggleReschedule(${index})">Reschedule</button>
+                        <button class="btn-details" onclick="toggleshowpatientdetails(${index})">Patient details</button>
+                    </td>
+                `;
+            });
+        }
+
+        function acceptAppointment(index) {
+            const confirmed = confirm(`Are you sure you want to accept the appointment with ${appointments[index].patientName}?`);
+            if (confirmed) {
+                appointments[index].status = 'accepted';
+                localStorage.setItem('appointments', JSON.stringify(appointments));
+                loadAppointments();
+                alert(`Appointment with ${appointments[index].patientName} has been accepted.`);
+            }
+        }
+
+        function declineAppointment(index) {
+            const confirmed = confirm(`Are you sure you want to decline the appointment with ${appointments[index].patientName}?`);
+            if (confirmed) {
+                appointments.splice(index, 1);
+                localStorage.setItem('appointments', JSON.stringify(appointments));
+                loadAppointments();
+                alert('Appointment declined and removed.');
+            }
+        }
+
+        function toggleReschedule(index) {
+            const rescheduleSection = document.getElementById('rescheduleSection');
+            rescheduleSection.style.display = 'block';
+
+            // Reset the form fields
+            document.getElementById('newDate').value = '';
+            document.getElementById('newTime').value = '';
+
+            // Add event listener to handle form submission
+            const rescheduleForm = document.getElementById('rescheduleForm');
+            rescheduleForm.onsubmit = function(event) {
+                event.preventDefault();
+                const newDate = document.getElementById('newDate').value;
+                const newTime = document.getElementById('newTime').value;
+
+                appointments[index].date = newDate;
+                appointments[index].time = newTime;
+                appointments[index].status = 'rescheduled'; // Update status to rescheduled
+                localStorage.setItem('appointments', JSON.stringify(appointments));
+                loadAppointments();
+                rescheduleSection.style.display = 'none'; // Hide reschedule section after submitting
+                alert('Appointment rescheduled successfully.');
+            };
+        }
+
+        function toggleshowpatientdetails(index) {
+            const appointment = appointments[index];
+            document.getElementById('detailPatientName').innerText = `Patient Name: ${appointment.patientName}`;
+            document.getElementById('detailPatientlastName').innerText = `Patient Last Name: ${appointment.patientLastName}`;
+            document.getElementById('detailDoctor').innerText = `Doctor: ${appointment.doctor}`;
+            document.getElementById('detailDate').innerText = `Date: ${appointment.date}`;
+            document.getElementById('detailTime').innerText = `Time: ${appointment.time}`;
+            toggleDetailsPanel();
+        }
+
+        function toggleDetailsPanel() {
+            const overlay = document.getElementById('overlay');
+            overlay.classList.toggle('show');
+        }
+
+        loadAppointments();
+    </script>
+</body>
+</html>
